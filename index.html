@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      background-color: #f5f0f1;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 100px;
+      background-color: rgb(33, 189, 189);
+      position: absolute;
+    }
+    #svgBox svg{
+      margin-top: 14px;
+      box-shadow: 2px 2px 6px 6px #dbdbdb;
+      background-color: #fff;
+    }
+    button {
+      border: 1px solid #666;
+      border-collapse: collapse;
+      height: 25px;
+      width: 60px;
+      margin-left: -1px;
+      cursor: pointer;
+    }
+    button:focus {
+      background-color: rgb(196, 196, 196);
+    }
+    #colorInput {
+      border: 1px solid #666;
+      height: 25px;
+      width: 60px;
+    }
+    .leftButton {
+      margin-right: 50px;
+    }
+  </style>
+</head>
+<body>
+  
+  <span class="leftButton">
+    <button onclick="openFiles()">打开</button>
+    <input type="file" name="" id="fileInput" hidden>
+    <button onclick="save()">保存</button>
+  </span>
+  
+  形状：<button onclick="shapeType = 'line'">线条</button><button onclick="shapeType = 'circular'">圆形</button><button onclick="shapeType = 'circle'">椭圆</button><button onclick="shapeType = 'rectangle'">矩形</button>
+  颜色：<input type="color" id="colorInput" value="#595d9d">
+  粗细：<input type="range" id="rangeInput" min='1' max='8' value="3">
+  <span class="widthValue">3</span>
+
+  <div id="svgBox">
+    <svg style="width: 1000; height: 600px; border: 2px solid #666" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"></svg> <br>
+  </div>
+
+  <script>
+    var svg = document.querySelector('svg')
+    var lastPos = null
+    var noSave = false
+    var shapeType = 'line'
+    var drowTheLine = 0
+    
+    svgBox.addEventListener('mousedown', function(e) {
+      if (!svg.contains(e.target)) {  //不在svg范围内点击
+        return 
+      }
+      noSave = true
+      drowTheLine++
+      if (shapeType == 'line') {
+        function drowDot(e) { 
+          var pos = mousePos(svg)
+          var line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
+
+          if (lastPos == null) {
+            line.setAttribute('x2', pos.x)
+            line.setAttribute('y2', pos.y)
+          } else {
+            line.setAttribute('x2', lastPos.x)
+            line.setAttribute('y2', lastPos.y)
+          }
+
+          line.setAttribute('data-drowTheLine', drowTheLine)
+          line.setAttribute('x1', pos.x)                          
+          line.setAttribute('y1', pos.y)
+          line.setAttribute('stroke', colorInput.value)
+          line.setAttribute('stroke-width', rangeInput.value)
+          line.setAttribute('stroke-linecap', "round")
+          
+          lastPos = pos
+          svg.append(line)
+          
+        }
+  
+        
+        document.addEventListener('mousemove', drowDot)//mousedown时才考虑mousemove事件
+    
+        document.addEventListener('mouseup', function(once) {
+          lastPos = null   //上一个位置为空 断开
+          document.removeEventListener('mouseup',once)
+          document.removeEventListener('mousemove', drowDot)
+        })
+
+      }
+      
+      if (shapeType == 'circular') {
+        var circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle')
+        circle.setAttribute('stroke', colorInput.value)
+        circle.setAttribute('stroke-width', rangeInput.value)
+        circle.setAttribute('fill', '#d94f70')
+
+        var pos = mousePos(svg)
+        function drowCircle() {
+          circle.setAttribute('data-drowTheLine', drowTheLine)
+          var curPos = mousePos(svg)
+          var cx = (pos.x + curPos.x) / 2
+          var cy = (pos.y + curPos.y) / 2
+          circle.setAttribute('cx', cx)
+          circle.setAttribute('cy', cy)
+          var r = Math.abs(pos.x - curPos.x) / 2
+          circle.setAttribute('r', r)
+
+          svg.append(circle)
+        }
+
+        document.addEventListener('mousemove', drowCircle)
+
+        document.addEventListener('mouseup', function(once) {
+          document.removeEventListener('mouseup',once)
+          document.removeEventListener('mousemove', drowCircle)
+        })
+
+      }
+
+      if (shapeType == 'circle') {
+        var ellipse = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse')
+        
+        ellipse.setAttribute('stroke', colorInput.value)
+        ellipse.setAttribute('stroke-width', rangeInput.value)
+        ellipse.setAttribute('fill', '#42b6a9')
+
+        var pos = mousePos(svg)
+        function drowEllipse() {
+          ellipse.setAttribute('data-drowTheLine', drowTheLine)
+          var curPos = mousePos(svg)
+          var cx = (pos.x + curPos.x) / 2
+          var cy = (pos.y + curPos.y) / 2
+          ellipse.setAttribute('cx', cx)
+          ellipse.setAttribute('cy', cy)
+          var rx = Math.abs(pos.x - curPos.x) / 2
+          var ry = Math.abs(pos.y - curPos.y) / 2
+          ellipse.setAttribute('rx', rx)
+          ellipse.setAttribute('ry', ry)
+
+          svg.append(ellipse)
+        }
+
+        document.addEventListener('mousemove', drowEllipse)
+
+        document.addEventListener('mouseup', function(once) {
+          document.removeEventListener('mouseup',once)
+          document.removeEventListener('mousemove', drowEllipse)
+        })
+      }
+    
+      if (shapeType == 'rectangle') {
+        var rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+        rect.setAttribute('stroke', colorInput.value)
+        rect.setAttribute('stroke-width', rangeInput.value)
+        rect.setAttribute('fill', '#9abad1')
+
+        var pos = mousePos(svg)
+        function drowRect() {
+          rect.setAttribute('data-drowTheLine', drowTheLine)
+          var curPos = mousePos(svg)
+          var x = pos.x
+          var y = pos.y
+          rect.setAttribute('x', x)
+          rect.setAttribute('y', y)
+          var width = curPos.x - x
+          var height = curPos.y - y
+          rect.setAttribute('width', width)
+          rect.setAttribute('height', height)
+
+          svg.append(rect)
+        }
+
+        document.addEventListener('mousemove', drowRect)
+
+        document.addEventListener('mouseup', function(once) {
+          document.removeEventListener('mouseup',once)
+          document.removeEventListener('mousemove', drowRect)
+        })
+
+      }
+    
+    })
+
+    document.addEventListener('keydown', function(e) {  //撤销
+      if (e.ctrlKey && e.key == 'z') {
+        if (svg.lastElementChild) {
+          var drowTheLine = svg.lastElementChild.dataset.drowTheLine
+          while (svg.lastElementChild && svg.lastElementChild.dataset.drowTheLine == drowTheLine) {
+            svg.removeChild(svg.lastElementChild)
+          }
+        }
+      }
+    })
+
+    var rangeInput = document.querySelector('#rangeInput')
+    var widthValue = document.querySelector('.widthValue')
+    rangeInput.addEventListener('input', function(e){
+      widthValue.textContent = rangeInput.value
+    })
+
+
+    function mousePos(node) { //获取鼠标位置
+      var box = node.getBoundingClientRect()
+      return {
+        x: window.event.clientX - box.x,
+        y: window.event.clientY - box.y,
+      }
+    }
+
+    window.addEventListener('beforeunload', e => {
+      if (noSave) {
+        return e.returnValue = '还未保存，确定要退出吗？'
+      }
+    })
+
+
+    //保存
+    function save() {
+      noSave = false
+      var source = svg.outerHTML
+      var blob = new Blob(['<?xml version="1.0" encoding="utf-8"?>', source], {type:'image/xml+svg'})
+      var url = URL.createObjectURL(blob)
+      var anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = 'zz.svg'
+      anchor.click()  //点击触发
+    }
+
+    //打开
+    function openFiles() {
+      if (noSave) {
+        var s = confirm('还未保存，是否打开？')
+        if (s == false) {
+          return 
+        }
+      }
+      fileInput.click()
+    }
+    fileInput.addEventListener('change', e => {
+      var file = fileInput.files[0]
+      var fr = new FileReader()
+      fr.addEventListener('load', () => {
+        var fileContent = fr.result
+        svgBox.innerHTML = fileContent
+        window.svg = svgBox.querySelector('svg')  //指向div里的svg
+      })
+      fr.readAsText(file)
+    })
+
+
+  </script>
+</body>
+</html>
